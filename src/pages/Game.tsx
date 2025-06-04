@@ -84,6 +84,7 @@ const Game = ({ testMode }: GameProps) => {
     setGameStarted(false);
     setShowTimeUpModal(false);
     setShowRoundCompleteModal(false);
+    setMatchedPairs(0); // Reset matched pairs when initializing new cards
     setTimeLeft(currentLevel.time); // Reset timer when cards are initialized
   }, [level]);
 
@@ -227,8 +228,8 @@ const Game = ({ testMode }: GameProps) => {
       round: round.toString()
     });
     
-    // Use window.location to force a full page refresh
-    window.location.href = `/game?${params.toString()}`;
+    // Use navigate instead of window.location
+    navigate(`/game?${params.toString()}`);
   };
 
   return (
