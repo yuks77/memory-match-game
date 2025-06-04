@@ -92,10 +92,13 @@ const Game = ({ testMode }: GameProps) => {
   useEffect(() => {
     initializeCards();
     
+    // Adjust preview time based on level
+    const previewTime = level === 1 ? 1500 : level === 2 ? 2000 : 3000;
+    
     const previewTimer = setTimeout(() => {
       setCards(prevCards => prevCards.map(card => ({ ...card, isFlipped: false })));
       setGameStarted(true);
-    }, 3000);
+    }, previewTime);
 
     return () => {
       clearTimeout(previewTimer);
@@ -103,7 +106,25 @@ const Game = ({ testMode }: GameProps) => {
     };
   }, [level, round, initializeCards]);
 
-  // Game timer
+  // Save score to leaderboard
+  const saveScore = useCallback(() => {
+    if (score > 0) { // Only save if there's a score
+      const username = localStorage.getItem('currentPlayer') || 'Anonymous';
+      const leaderboard = JSON.parse(localStorage.getItem('leaderboard') || '[]');
+      leaderboard.push({ name: username, score });
+      leaderboard.sort((a: { score: number }, b: { score: number }) => b.score - a.score);
+      localStorage.setItem('leaderboard', JSON.stringify(leaderboard.slice(0, 5)));
+    }
+  }, [score]);
+
+  // Save score when component unmounts
+  useEffect(() => {
+    return () => {
+      saveScore();
+    };
+  }, [saveScore]);
+
+  // Handle time up
   useEffect(() => {
     let timer: number;
 
@@ -113,6 +134,7 @@ const Game = ({ testMode }: GameProps) => {
           if (time <= 1) {
             setShowTimeUpModal(true);
             setGameStarted(false);
+            saveScore(); // Save score when time runs out
             return 0;
           }
           return time - 1;
@@ -125,7 +147,7 @@ const Game = ({ testMode }: GameProps) => {
         window.clearInterval(timer);
       }
     };
-  }, [gameStarted]);
+  }, [gameStarted, saveScore]);
 
   // Handle card click
   const handleCardClick = (clickedId: number) => {
@@ -208,13 +230,16 @@ const Game = ({ testMode }: GameProps) => {
   };
 
   const handleGameComplete = () => {
-    const username = localStorage.getItem('currentPlayer') || 'Anonymous';
-    const leaderboard = JSON.parse(localStorage.getItem('leaderboard') || '[]');
-    leaderboard.push({ name: username, score });
-    leaderboard.sort((a: { score: number }, b: { score: number }) => b.score - a.score);
-    localStorage.setItem('leaderboard', JSON.stringify(leaderboard.slice(0, 5)));
+    saveScore();
     localStorage.removeItem('currentPlayer');
     navigate('/leaderboard');
+  };
+
+  // Handle exit
+  const handleExit = () => {
+    saveScore();
+    localStorage.removeItem('currentPlayer');
+    navigate('/');
   };
 
   // Handle restart
@@ -281,12 +306,12 @@ const Game = ({ testMode }: GameProps) => {
           >
             <span className="mr-1">🔄</span> Restart
           </button>
-          <Link 
-            to="/"
+          <button 
+            onClick={handleExit}
             className="flex items-center text-[#8B6E5E] hover:text-[#D4A5A5] transition-colors"
           >
             <span className="mr-1">🏃‍♂️💨</span> Exit
-          </Link>
+          </button>
         </div>
         <div>© 2025 Yuko Shimura. All rights reserved.</div>
       </div>
