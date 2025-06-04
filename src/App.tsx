@@ -14,13 +14,15 @@ const TestGameComplete = () => {
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/start" element={<UsernameInput />} />
-        <Route path="/game" element={<Game />} />
-        <Route path="/test-complete" element={<TestGameComplete />} />
-        <Route path="/leaderboard" element={<Leaderboard />} />
-      </Routes>
+      <div className="min-h-screen h-full">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/start" element={<UsernameInput />} />
+          <Route path="/game" element={<Game />} />
+          <Route path="/test-complete" element={<TestGameComplete />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+        </Routes>
+      </div>
     </Router>
   )
 }

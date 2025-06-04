@@ -6,14 +6,14 @@ const Home = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col items-center justify-center space-y-6 w-full max-w-md px-4">
         {/* Title with Emojis */}
-        <h1 className="text-5xl font-bold text-[#8B6E5E] flex items-center">
-          <span className="text-3xl">🌸</span>
+        <h1 className="text-4xl md:text-5xl font-bold text-[#8B6E5E] flex items-center">
+          <span className="text-2xl md:text-3xl">🌸</span>
           Memory Match
-          <span className="text-3xl">🍵</span>
+          <span className="text-2xl md:text-3xl">🍵</span>
         </h1>
 
         {/* Subtitle */}
-        <p className="text-[#8B6E5E] text-xl text-center">
+        <p className="text-lg md:text-xl text-[#8B6E5E] text-center">
           Match cards and test your memory
         </p>
 

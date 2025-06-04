@@ -37,7 +37,7 @@ const Game = ({ testMode }: GameProps) => {
 
   const [cards, setCards] = useState<CardType[]>([]);
   const [matchedPairs, setMatchedPairs] = useState<number>(0);
-  const [timeLeft, setTimeLeft] = useState<number>(LEVEL_CONFIG[1].time);
+  const [timeLeft, setTimeLeft] = useState<number>(LEVEL_CONFIG[(currentLevel || 1) as 1 | 2 | 3].time);
   const [score, setScore] = useState<number>(isRestart ? currentScore : 0);
   const [gameStarted, setGameStarted] = useState<boolean>(false);
   const [level, setLevel] = useState<number>(isRestart ? currentLevel : 1);
@@ -53,18 +53,17 @@ const Game = ({ testMode }: GameProps) => {
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
-  // Calculate progress bar width
-  const getProgressWidth = () => {
-    const currentLevel = LEVEL_CONFIG[level as keyof typeof LEVEL_CONFIG];
-    return `${(timeLeft / currentLevel.time) * 100}%`;
-  };
-
   useEffect(() => {
     const username = localStorage.getItem('currentPlayer');
     if (!username) {
       navigate('/start');
     }
   }, [navigate]);
+
+  // Reset timer when level or round changes
+  useEffect(() => {
+    setTimeLeft(LEVEL_CONFIG[level as keyof typeof LEVEL_CONFIG].time);
+  }, [level, round]);
 
   // Initialize cards for current level
   const initializeCards = useCallback(() => {
@@ -85,6 +84,7 @@ const Game = ({ testMode }: GameProps) => {
     setGameStarted(false);
     setShowTimeUpModal(false);
     setShowRoundCompleteModal(false);
+    setTimeLeft(currentLevel.time); // Reset timer when cards are initialized
   }, [level]);
 
   // Start new round
@@ -96,27 +96,35 @@ const Game = ({ testMode }: GameProps) => {
       setGameStarted(true);
     }, 3000);
 
-    return () => clearTimeout(previewTimer);
+    return () => {
+      clearTimeout(previewTimer);
+      setGameStarted(false); // Ensure game is stopped when unmounting
+    };
   }, [level, round, initializeCards]);
 
   // Game timer
   useEffect(() => {
-    if (!gameStarted || timeLeft <= 0) return;
+    let timer: number;
 
-    const timer = setInterval(() => {
-      setTimeLeft(time => {
-        if (time <= 1) {
-          clearInterval(timer);
-          setShowTimeUpModal(true);
-          setGameStarted(false);
-          return 0;
-        }
-        return time - 1;
-      });
-    }, 1000);
+    if (gameStarted && timeLeft > 0) {
+      timer = window.setInterval(() => {
+        setTimeLeft(time => {
+          if (time <= 1) {
+            setShowTimeUpModal(true);
+            setGameStarted(false);
+            return 0;
+          }
+          return time - 1;
+        });
+      }, 1000);
+    }
 
-    return () => clearInterval(timer);
-  }, [gameStarted, timeLeft]);
+    return () => {
+      if (timer) {
+        window.clearInterval(timer);
+      }
+    };
+  }, [gameStarted]);
 
   // Handle card click
   const handleCardClick = (clickedId: number) => {
@@ -208,7 +216,9 @@ const Game = ({ testMode }: GameProps) => {
     navigate('/leaderboard');
   };
 
+  // Handle restart
   const handleTryAgain = () => {
+    setGameStarted(false); // Stop the current timer
     // Construct URL with current state as parameters
     const params = new URLSearchParams({
       restart: 'true',
@@ -222,41 +232,33 @@ const Game = ({ testMode }: GameProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFF5F5] flex flex-col items-center">
-      <div className="w-full max-w-xl flex flex-col px-4 pt-4">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div className="text-[#8B6E5E] text-lg font-medium">
-            Level {level} · Round {round}
-          </div>
-          <div className="text-[#8B6E5E] text-lg font-medium">
-            Score: {score}
-          </div>
+    <div className="min-h-screen h-full flex flex-col items-center py-8 md:py-12">
+      {/* Header */}
+      <div className="w-full max-w-xl px-4">
+        <div className="flex justify-between items-center text-lg md:text-2xl font-semibold text-[#8B6E5E] mb-4">
+          <div>Level {level} · Round {round}</div>
+          <div>Score: {score}</div>
         </div>
+      </div>
 
-        {/* Progress Bar */}
-        <div className="w-full h-2 bg-[#F5E6E6] rounded-full overflow-hidden mt-1">
-          <div 
+      {/* Timer Bar */}
+      <div className="w-full max-w-xl px-4 mb-2">
+        <div className="h-2 bg-white rounded-full overflow-hidden">
+          <div
             className="h-full bg-[#D4A5A5] transition-all duration-1000 ease-linear"
-            style={{ width: getProgressWidth() }}
+            style={{ width: `${(timeLeft / LEVEL_CONFIG[level as 1 | 2 | 3].time) * 100}%` }}
           />
         </div>
+      </div>
 
-        {/* Timer */}
-        <div className="text-center text-[#8B6E5E] text-xl font-medium mt-1">
-          {formatTime(timeLeft)}
-        </div>
+      {/* Timer */}
+      <div className="text-center text-[#8B6E5E] text-xl font-medium mb-4">
+        {formatTime(timeLeft)}
+      </div>
 
-        {/* Game Grid */}
-        <div className={`grid ${
-          level === 1 ? 'grid-cols-3' : 
-          level === 2 ? 'grid-cols-4' : 
-          'grid-cols-5'
-        } gap-2 mt-2 ${
-          level === 1 ? '-translate-y-24' :
-          level === 2 ? '-translate-y-16' :
-          '-translate-y-12'
-        }`}>
+      {/* Cards Grid */}
+      <div className="w-full max-w-xl px-4 -mt-16 md:-mt-20">
+        <div className="grid grid-cols-3 gap-3 md:gap-4">
           {cards.map(card => (
             <Card
               key={card.id}
@@ -267,25 +269,25 @@ const Game = ({ testMode }: GameProps) => {
             />
           ))}
         </div>
+      </div>
 
-        {/* Footer */}
-        <div className="text-[#8B6E5E] text-sm text-center mt-16">
-          <div className="flex justify-center space-x-4 mb-4">
-            <button 
-              onClick={handleTryAgain}
-              className="flex items-center text-[#8B6E5E] hover:text-[#D4A5A5] transition-colors"
-            >
-              <span className="mr-1">🔄</span> Restart
-            </button>
-            <Link 
-              to="/"
-              className="flex items-center text-[#8B6E5E] hover:text-[#D4A5A5] transition-colors"
-            >
-              <span className="mr-1">🏃‍♂️💨</span> Exit
-            </Link>
-          </div>
-          <div>© 2025 Yuko Shimura. All rights reserved.</div>
+      {/* Footer */}
+      <div className="text-[#8B6E5E] text-sm text-center mt-28 md:mt-36">
+        <div className="flex justify-center space-x-4 mb-4">
+          <button 
+            onClick={handleTryAgain}
+            className="flex items-center text-[#8B6E5E] hover:text-[#D4A5A5] transition-colors"
+          >
+            <span className="mr-1">🔄</span> Restart
+          </button>
+          <Link 
+            to="/"
+            className="flex items-center text-[#8B6E5E] hover:text-[#D4A5A5] transition-colors"
+          >
+            <span className="mr-1">🏃‍♂️💨</span> Exit
+          </Link>
         </div>
+        <div>© 2025 Yuko Shimura. All rights reserved.</div>
       </div>
 
       {/* Round Complete Modal */}

@@ -21,13 +21,13 @@ const UsernameInput = () => {
       <div className="flex-1 flex flex-col items-center w-full max-w-md px-4">
         {/* Title Section */}
         <div className="mt-8">
-          <h1 className="text-5xl font-bold text-[#8B6E5E] flex items-center">
-            <span className="text-3xl">🌸</span>
+          <h1 className="text-4xl md:text-5xl font-bold text-[#8B6E5E] flex items-center">
+            <span className="text-2xl md:text-3xl">🌸</span>
             Memory Match
-            <span className="text-3xl">🍵</span>
+            <span className="text-2xl md:text-3xl">🍵</span>
           </h1>
 
-          <p className="text-[#8B6E5E] text-xl text-center mt-2">
+          <p className="text-lg md:text-xl text-[#8B6E5E] text-center mt-2">
             Match cards and test your memory
           </p>
         </div>
@@ -35,8 +35,8 @@ const UsernameInput = () => {
         {/* Username Input Section */}
         <div className="w-full mt-12">
           <div className="text-center space-y-2">
-            <h2 className="text-3xl font-semibold text-[#8B6E5E]">What's your name?</h2>
-            <p className="text-[#8B6E5E] text-xl">Enter a username to appear on the leaderboard</p>
+            <h2 className="text-2xl md:text-3xl font-semibold text-[#8B6E5E]">What's your name?</h2>
+            <p className="text-lg md:text-xl text-[#8B6E5E]">Enter a username to appear on the leaderboard</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4 mt-6">
