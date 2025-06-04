@@ -253,12 +253,12 @@ const Game = ({ testMode }: GameProps) => {
       </div>
 
       {/* Timer */}
-      <div className="text-center text-[#8B6E5E] text-xl font-medium mb-4">
+      <div className="text-center text-[#8B6E5E] text-xl font-medium mb-8">
         {formatTime(timeLeft)}
       </div>
 
       {/* Cards Grid */}
-      <div className="w-full max-w-xl px-4 -mt-16 md:-mt-20">
+      <div className="w-full max-w-xl px-4">
         <div className="grid grid-cols-3 gap-3 md:gap-4">
           {cards.map(card => (
             <Card
@@ -273,7 +273,7 @@ const Game = ({ testMode }: GameProps) => {
       </div>
 
       {/* Footer */}
-      <div className="text-[#8B6E5E] text-sm text-center mt-28 md:mt-36">
+      <div className="text-[#8B6E5E] text-sm text-center mt-auto pt-8 md:pt-12">
         <div className="flex justify-center space-x-4 mb-4">
           <button 
             onClick={handleTryAgain}
