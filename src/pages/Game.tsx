@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import Card from '../components/Card';
 
 interface CardType {
@@ -27,7 +27,6 @@ const EMOJIS = [
 
 const Game = ({ testMode }: GameProps) => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [searchParams] = useSearchParams();
   
   // Get state from URL parameters for restart
@@ -37,7 +36,6 @@ const Game = ({ testMode }: GameProps) => {
   const currentRound = parseInt(searchParams.get('round') || '1');
 
   const [cards, setCards] = useState<CardType[]>([]);
-  const [flippedCards, setFlippedCards] = useState<number[]>([]);
   const [matchedPairs, setMatchedPairs] = useState<number>(0);
   const [timeLeft, setTimeLeft] = useState<number>(LEVEL_CONFIG[1].time);
   const [score, setScore] = useState<number>(isRestart ? currentScore : 0);
@@ -69,7 +67,7 @@ const Game = ({ testMode }: GameProps) => {
   }, [navigate]);
 
   // Initialize cards for current level
-  const initializeCards = () => {
+  const initializeCards = useCallback(() => {
     const currentLevel = LEVEL_CONFIG[level as keyof typeof LEVEL_CONFIG];
     const pairs = currentLevel.pairs;
     const levelEmojis = EMOJIS.slice(0, pairs);
@@ -84,13 +82,10 @@ const Game = ({ testMode }: GameProps) => {
       }));
 
     setCards(cardPairs);
-    setFlippedCards([]);
-    setMatchedPairs(0);
-    setTimeLeft(currentLevel.time);
     setGameStarted(false);
     setShowTimeUpModal(false);
     setShowRoundCompleteModal(false);
-  };
+  }, [level]);
 
   // Start new round
   useEffect(() => {
@@ -102,7 +97,7 @@ const Game = ({ testMode }: GameProps) => {
     }, 3000);
 
     return () => clearTimeout(previewTimer);
-  }, [level, round]);
+  }, [level, round, initializeCards]);
 
   // Game timer
   useEffect(() => {
@@ -121,7 +116,7 @@ const Game = ({ testMode }: GameProps) => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [gameStarted]);
+  }, [gameStarted, timeLeft]);
 
   // Handle card click
   const handleCardClick = (clickedId: number) => {
@@ -207,7 +202,7 @@ const Game = ({ testMode }: GameProps) => {
     const username = localStorage.getItem('currentPlayer') || 'Anonymous';
     const leaderboard = JSON.parse(localStorage.getItem('leaderboard') || '[]');
     leaderboard.push({ name: username, score });
-    leaderboard.sort((a: any, b: any) => b.score - a.score);
+    leaderboard.sort((a: { score: number }, b: { score: number }) => b.score - a.score);
     localStorage.setItem('leaderboard', JSON.stringify(leaderboard.slice(0, 5)));
     localStorage.removeItem('currentPlayer');
     navigate('/leaderboard');
